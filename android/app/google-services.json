@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "914538468338",
+    "project_id": "hospitalapp-280e8",
+    "storage_bucket": "hospitalapp-280e8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:914538468338:android:fce761194dee556e9cd16b",
+        "android_client_info": {
+          "package_name": "com.hospital_booking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-sY4V0MHZniIk6szYv4oNbqL131ozCmQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

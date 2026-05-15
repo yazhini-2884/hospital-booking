@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:hospital_booking/registration.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CertificationUploadPage extends StatefulWidget {
   const CertificationUploadPage({super.key});
@@ -11,8 +13,8 @@ class CertificationUploadPage extends StatefulWidget {
 }
 
 class _CertificationUploadPageState extends State<CertificationUploadPage> {
-  String? qualificationFile;
-  String? certificateFile;
+  String? qualificationFilePath;
+  String? certificateFilePath;
 
   Future<void> pickFile(bool isQualificationFile) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -23,13 +25,82 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
     if (result != null) {
       setState(() {
         if (isQualificationFile) {
-          qualificationFile = result.files.single.name;
+          qualificationFilePath = result.files.single.path;
         } else {
-          certificateFile = result.files.single.name;
+          certificateFilePath = result.files.single.path;
         }
       });
     }
   }
+   
+     // 🔥 UPLOAD API CALL
+  Future<void> uploadFiles() async {
+
+    if (qualificationFilePath == null || certificateFilePath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Upload both files")),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    String? doctorId = prefs.getString("doctor_id");
+
+    if (doctorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Doctor ID not found")),
+      );
+      return;
+    }
+
+    try {
+      var request = http.MultipartRequest(
+        "POST",
+        Uri.parse("http://192.168.29.236:3000/api/certificate/upload"),
+      );
+
+      request.fields["doctor_id"] = doctorId;
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          "qualification",
+          qualificationFilePath!,
+        ),
+      );
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          "certificate",
+          certificateFilePath!,
+        ),
+      );
+
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Upload Success ✅")),
+        );
+
+        // ✅ Navigate only after success
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => Registration()),
+        );
+
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Upload Failed ❌")),
+        );
+      }
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -76,11 +147,11 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
               },
             ),
 
-            if (qualificationFile != null)
+            if (qualificationFilePath != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  "Uploaded: $qualificationFile",
+                  "Uploaded: $qualificationFilePath",
                   style: const TextStyle(fontSize: 14, color: Colors.green),
                 ),
               ),
@@ -111,11 +182,11 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
               },
             ),
 
-            if (certificateFile != null)
+            if (certificateFilePath != null)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: Text(
-                  "Uploaded: $certificateFile",
+                  "Uploaded: $certificateFilePath",
                   style: const TextStyle(fontSize: 14, color: Colors.green),
                 ),
               ),
@@ -124,24 +195,7 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
 
             /// Submit Button
             ElevatedButton(
-              onPressed: () {
-                if (qualificationFile != null && certificateFile != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Files submitted successfully!')),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content:
-                            Text('Please upload both files before submitting.')),
-                  );
-                }
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => Registration()),
-                );
-              },
+              onPressed: uploadFiles,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,

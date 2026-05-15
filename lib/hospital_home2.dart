@@ -1,11 +1,18 @@
 
 import 'package:flutter/material.dart';
-
+import 'package:hospital_booking/hospital_manage_appointment.dart';
 class HospitalHome2 extends StatelessWidget {
   const HospitalHome2({super.key});
 
-  Widget patientcard(){
-    return Container(
+  Widget patientcard(BuildContext context){
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HospitalManageAppointment()),
+        );
+    },
+    child: Container(
       margin: EdgeInsets.symmetric(vertical: 8),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -45,7 +52,8 @@ class HospitalHome2 extends StatelessWidget {
           )
         ],
     ),
-    );
+    ),
+);
   }
 @override
   Widget build(BuildContext context){
@@ -75,9 +83,9 @@ class HospitalHome2 extends StatelessWidget {
               ),
               textAlign: TextAlign.left,
             ),
-            patientcard(),
-            patientcard(),
-            patientcard(),
+            patientcard(context),
+            patientcard(context),
+            patientcard(context),
 
             const SizedBox(height: 20),
             const Text(
@@ -89,8 +97,8 @@ class HospitalHome2 extends StatelessWidget {
               ),
               textAlign: TextAlign.left,
             ),
-            patientcard(),
-            patientcard(),    
+            patientcard(context),
+            patientcard(context),    
           ],
         ),
       ),

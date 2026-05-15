@@ -2,6 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:hospital_booking/address_model.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HospitalLocationScreen extends StatefulWidget {
   const HospitalLocationScreen({super.key});
@@ -19,6 +22,68 @@ class _HospitalLocationScreenState extends State<HospitalLocationScreen>{
   final pincodeController = TextEditingController();
   final cityController = TextEditingController();
   final stateController = TextEditingController();  
+
+// 🔥 API FUNCTION (NO MOBILE)
+  Future<void> saveAddress() async {
+
+    // ✅ GET hospital_id from local storage
+    final prefs = await SharedPreferences.getInstance();
+    int? hospitalId = prefs.getInt("hospital_id");
+
+    if (hospitalId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User not logged in")),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse("http://192.168.29.236:3000/api/hospital/update-address"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "hospital_id": hospitalId, // ✅ USE ID
+          "house_number": houseController.text.trim(),
+          "street": streetController.text.trim(),
+          "landmark": landmarkController.text.trim(),
+          "pincode": pincodeController.text.trim(),
+          "city": cityController.text.trim(),
+          "state": stateController.text.trim(),
+        }),
+      );
+      
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["message"])),
+        );
+
+        Addressmodel addressmodel = Addressmodel(
+          houseNumber: houseController.text,
+          street: streetController.text,
+          landmark: landmarkController.text,
+          pincode: pincodeController.text,
+          city: cityController.text,
+          state: stateController.text,
+        );
+
+        Navigator.pop(context, addressmodel);
+
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed")),
+        );
+      }
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,21 +106,21 @@ class _HospitalLocationScreenState extends State<HospitalLocationScreen>{
           child: Column(
             children: [
               /// Hospital Name
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Hospital Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              //TextField(
+                //controller: nameController,
+                //decoration: const InputDecoration(
+                  //labelText: 'Hospital Name',
+                  //border: OutlineInputBorder(),
+                //),
+              //),
 
-              const SizedBox(height: 20),
+              //const SizedBox(height: 20),
 
               /// House Number
               TextField(
                 controller: houseController,
                 decoration: const InputDecoration(
-                  labelText: 'House Number',
+                  labelText: 'Door Number',
                   border: OutlineInputBorder(),
                 ),
               ),

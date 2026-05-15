@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:hospital_booking/doctor_registration.dart';
 import 'package:hospital_booking/hospital_registration.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Registration extends StatelessWidget {
   const Registration({super.key});
@@ -32,8 +33,7 @@ class Registration extends StatelessWidget {
                onTap:() {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder:(context) => DoctorRegistration() ,
-                  ),
+                  MaterialPageRoute(builder:(context) => const DoctorRegistration()),
                 );
                } ,
                child: Container(
@@ -58,11 +58,14 @@ class Registration extends StatelessWidget {
             const SizedBox(height: 40),
 
         GestureDetector(
-               onTap:() {
+               onTap:() async {
+                final prefs = await SharedPreferences.getInstance();
+                final hospitalId = prefs.getString("hospital_id") ?? "";
+                
+                if (!context.mounted) return;
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder:(context) => HospitalRegistration() ,
-                  ),
+                  MaterialPageRoute(builder:(context) => HospitalRegistration(hospitalId: hospitalId)),
                 );
                } ,
                child: Container(

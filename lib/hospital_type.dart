@@ -1,6 +1,9 @@
 
 import 'package:flutter/material.dart';
-import 'package:hospital_booking/hospital_home1.dart';
+import 'package:hospital_booking/hospital_home2.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HospitalType extends StatefulWidget {
   const HospitalType({super.key});
@@ -32,6 +35,68 @@ class _HospitalTypeState extends State<HospitalType> {
     'Psychiatry',
     'Urology'
   ];
+
+  // 🔥 API FUNCTION
+  Future<void> saveHospitalType() async {
+
+    if (selectedHospitalType == null || selectedDepartment == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Select all fields")),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    String? hospitalId = prefs.getString("hospital_id");
+
+    if (hospitalId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Hospital ID not found")),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.put(
+        Uri.parse("http://192.168.29.236:3000/api/hospital/update-type"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "hospital_id": hospitalId,
+          "hospital_type": selectedHospitalType,
+          "department": selectedDepartment,
+        }),
+      );
+
+      print("Status: ${response.statusCode}");
+      print("Body: ${response.body}");
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["message"])),
+        );
+
+        // ✅ Navigate only after success
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HospitalHome2()),
+        );
+
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to save")),
+        );
+      }
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -118,14 +183,7 @@ class _HospitalTypeState extends State<HospitalType> {
 
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => HospitalHome1()),
-                      );
-                      // Handle button press
-                    },
-                  
+                    onPressed: saveHospitalType,
               style: ButtonStyle(
               backgroundColor: WidgetStateProperty.all<Color>(Colors.blue),
               foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
